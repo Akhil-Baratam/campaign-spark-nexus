@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Campaigns from "./pages/Campaigns";
 import CampaignCreate from "./pages/CampaignCreate";
 import CampaignHistory from "./pages/CampaignHistory";
+import Customers from "./pages/Customers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +25,7 @@ const App = () => (
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/create" element={<CampaignCreate />} />
           <Route path="/campaigns/history" element={<CampaignHistory />} />
+          <Route path="/customers" element={<Customers />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
