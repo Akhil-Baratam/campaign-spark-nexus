@@ -1,5 +1,11 @@
 import { supabase, Customer, Campaign, Rule, RuleGroup } from './supabase';
 import { toast } from '@/components/ui/use-toast';
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true
+});
 
 export async function getCustomers(): Promise<Customer[]> {
   try {
@@ -128,17 +134,44 @@ export async function simulateDelivery(campaignId: string, message: string): Pro
 
 export async function generateAIMessages(campaignIntent: string): Promise<string[]> {
   try {
-    const { data, error } = await supabase.functions.invoke('generate-messages', {
-      body: { intent: campaignIntent }
+    if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not found');
+    }
+
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a marketing expert that creates engaging and professional campaign messages. Generate 3 unique message variations that are concise and effective."
+        },
+        {
+          role: "user",
+          content: `Create 3 different marketing messages for the following campaign intent: ${campaignIntent}`
+        }
+      ],
+      model: "gpt-3.5-turbo",
     });
-    
-    if (error) throw error;
-    return data.messages;
+
+    const messages = completion.choices.map(choice => 
+      choice.message.content?.trim()
+    ).filter(Boolean) as string[];
+
+    return messages.length > 0 ? messages : [
+      `We noticed you've been shopping with us and we'd love to offer you a special discount on your next purchase.`,
+      `As a valued customer, we're excited to share an exclusive offer with you.`,
+      `Don't miss out on our latest deals, specially curated for customers like you.`
+    ];
   } catch (error) {
     console.error('Error generating messages:', error);
+    toast({
+      variant: "destructive",
+      title: "Error generating messages",
+      description: "Failed to generate AI messages. Using fallback messages instead."
+    });
     return [
       `We noticed you've been shopping with us and we'd love to offer you a special discount on your next purchase.`,
-      `As a valued customer, we're excited to share an exclusive offer with you.`
+      `As a valued customer, we're excited to share an exclusive offer with you.`,
+      `Don't miss out on our latest deals, specially curated for customers like you.`
     ];
   }
 }
